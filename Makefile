@@ -1,62 +1,71 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: akok <akok@student.42.fr>                  +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2025/05/26 15:54:33 by akok              #+#    #+#              #
-#    Updated: 2025/07/11 08:59:16 by akok             ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
+CC			= cc
+CFLAGS		= -Werror -Wextra -Wall -g3 #-fsanitize=address
+INC			= -I ./includes/\
+			  -I ./libft/\
+			  -I ./minilibx-linux/
 
-CC = cc
-CFLAGS = -Wall -Wextra -Werror -Iincludes -Ilibft
+NAME		= fdf
 
-SRCS =	srcs/draw.c			\
-		srcs/event_utils.c	\
-		srcs/event.c		\
-		srcs/fdf.c			\
-		srcs/init.c			\
-		srcs/interp.c		\
-		srcs/parse_map.c	\
-		srcs/render.c		\
-		srcs/transform.c	\
-		srcs/utils.c		\
-		srcs/view.c
+MLX_PATH	= minilibx-linux/
+MLX			= $(MLX_PATH)libmlx_Linux.a
 
-OBJS = $(SRCS:%.c=%.o)
+LIBFT_PATH	= libft/
+LIBFT		= $(LIBFT_PATH)libft.a
 
-LIB_PATH = ./libft
-LIBFT = $(LIB_PATH)/libft.a
+#find . -type f -name "*.c" | sed 's|^\./||'
+SRC_PATH = ./srcs/
+SRC		= 	draw.c \
+			event_utils.c \
+			event.c \
+			fdf.c \
+			init.c \
+			interp.c \
+			parse_map.c \
+			render.c \
+			transform.c \
+			utils.c \
+			view.c
 
-NAME = fdf
+SRCS	= $(addprefix $(SRC_PATH), $(SRC))
 
-all: $(NAME) $(LIBFT)
+OBJ_PATH	= ./obj/
+OBJ			= $(SRC:.c=.o)
+OBJS		= $(addprefix $(OBJ_PATH), $(OBJ))
 
-$(NAME): $(OBJS) $(LIBFT)
-	@$(CC) $(CFLAGS) $(OBJS) -Lmlx_linux -lmlx_Linux -L/usr/lib -Imlx_linux -lXext -lX11 -lm -lz $(LIBFT) -o $(NAME)
-	@echo "$(NAME) built."
-	
+all: $(OBJ_PATH) $(MLX) $(LIBFT) $(NAME)
+
+$(OBJ_PATH):
+	mkdir -p $(OBJ_PATH)
+	mkdir -p $(OBJ_PATH)/exit
+	mkdir -p $(OBJ_PATH)/image
+	mkdir -p $(OBJ_PATH)/init
+	mkdir -p $(OBJ_PATH)/input_n_movement
+	mkdir -p $(OBJ_PATH)/memory	
+	mkdir -p $(OBJ_PATH)/parsing
+	mkdir -p $(OBJ_PATH)/rendering
+	mkdir -p $(OBJ_PATH)/validation
+
+$(OBJ_PATH)%.o: $(SRC_PATH)%.c
+	$(CC) $(CFLAGS) -c $< -o $@ $(INC)
+
+$(NAME): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $@ $(INC) $(LIBFT) $(MLX) -lXext -lX11 -lm
+
 $(LIBFT):
-	@make -C $(LIB_PATH) all
-	@make -C $(LIB_PATH) bonus
+	make -sC $(LIBFT_PATH)
 
-%.o: %.c
-	@$(CC) $(CFLAGS) -I/usr/include -Imlx_linux -O3 -c $< -o $@
-
-bonus: all
+$(MLX):
+	make -sC $(MLX_PATH)
 
 clean:
-	@rm -f $(OBJS)
-	@make -C $(LIB_PATH) clean
-	@echo "object files removed."
-	
+	rm -rf $(OBJ_PATH)
+	make -C $(LIBFT_PATH) clean
+	make -C $(MLX_PATH) clean
+
 fclean: clean
-	@rm -f $(NAME)
-	@make -C $(LIB_PATH) fclean
-	@echo "$(NAME) removed."
+	rm -f $(NAME)
+	make -C $(LIBFT_PATH) fclean
 
 re: fclean all
 
-.PHONY: all clean fclean re bonus
+.PHONY: all re clean fclean
